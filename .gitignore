@@ -1,0 +1,12 @@
+.env
+__pycache__
+.coverage
+.vscode
+.pytest_cache
+data/browser_user_data/
+data/huggingface_cache/
+data/outputs/
+data/logs/
+data/tests/
+*.txt
+*.log
