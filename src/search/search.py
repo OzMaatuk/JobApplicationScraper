@@ -64,8 +64,9 @@ class LinkedInJobSearch:
             url_parts["location"] = location
         if geold:
             url_parts["geold"] = geold
-        if additional_filters:  # TODO: Implement proper filter handling
-            url_parts.update(additional_filters)
+        if additional_filters:
+            # TODO: Implement proper filter handling
+            raise NotImplementedError("Filter handling is not implemented yet.")
 
         return base_url + urllib.parse.urlencode(url_parts)
 

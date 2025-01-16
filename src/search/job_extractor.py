@@ -100,8 +100,6 @@ class JobExtractor:
         if url:
             self.page.goto(url)
             wait_for_url_change(self.page, url)
-            sleep(3) # TODO: replace with proper wait to avoid stale element exception
-
         try:
             jobs = self._process_job_elements(limit)
         except Exception as e:
