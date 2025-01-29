@@ -1,93 +1,62 @@
 # tests\test_job_extractor.py
 
 import pytest
-from unittest.mock import MagicMock
 from playwright.sync_api import Page
-from src.search.job_extractor import JobExtractor
+
+import src.logger as LOGGER
+from src.constants.constants import Constants
+from src.search.linkedin.job_extractor import JobExtractor
 from src.models.job import Job
+from src.constants.constants import Constants
 
-@pytest.fixture
-def mock_page() -> Page:
-    """Provides a mocked Playwright Page instance."""
-    page = MagicMock(spec=Page)
-    page.url = "https://www.linkedin.com/jobs/search/?distance=25&geoId=101620260&keywords=qa%20automation%20engineer"
-    return page
+logger = LOGGER.get(__name__)
 
-@pytest.fixture
-def job_extractor(mock_page: Page) -> JobExtractor:
-    """Provides a JobExtractor instance with a mocked Page."""
-    return JobExtractor(mock_page)
 
-def test_simple_job_extractor(job_extractor: JobExtractor, mock_page: Page):
-    mock_page.goto = MagicMock()
-    mock_page.url = "https://www.linkedin.com/jobs/search/?distance=25&geoId=101620260&keywords=qa%20automation%20engineer"
-    mock_page.locators = MagicMock()
-    mock_page.locators.SEARCH_RESULTS = MagicMock(return_value=[MagicMock()] * 5)
-    mock_page.locators.TITLE = MagicMock(return_value="Test Job")
-    mock_page.locators.COMPANY = MagicMock(return_value="Test Company")
-    mock_page.locators.LOCATION = MagicMock(return_value="Test Location")
-    mock_page.locators.URL = MagicMock(return_value="about:blank")
-    mock_page.locators.DESCRIPTION = MagicMock(return_value="Test Description")
-    mock_page.locators.EASY_APPLY = MagicMock(return_value=True)
-    mock_page.locators.APPLY = MagicMock(return_value=True)
+class TestJobExtractor:
+    @pytest.fixture(autouse=True)
+    def setup(self, mocker: pytest.MonkeyPatch):
+        self.mocker = mocker
+        self.mock_page = self.mocker.MagicMock(spec=Page)
+        self.job_extractor = JobExtractor(self.mock_page, Constants)
+        logger.info("Setup for JobExtractor tests")
 
-    jobs = job_extractor.extract_jobs(limit=5)
-    assert len(jobs) == 5
-    for job in jobs:
-        assert isinstance(job, Job)
-        assert job.title == "Test Job"
-        assert job.company == "Test Company"
-        assert job.location == "Test Location"
-        assert job.url == "about:blank"
-        assert job.description == "Test Description"
-        assert job.easy_apply is True
+    def test_extract_job_information_no_results(self) -> None:
+        """Tests the extraction of job information when no results are found."""
+        logger.info("Starting test_extract_job_information_no_results")
 
-def test_long_job_extractor(job_extractor: JobExtractor, mock_page: Page):
-    mock_page.goto = MagicMock()
-    mock_page.url = "https://www.linkedin.com/jobs/search/?distance=25&geoId=101620260&keywords=qa%20automation%20engineer"
-    mock_page.locators = MagicMock()
-    mock_page.locators.SEARCH_RESULTS = MagicMock(return_value=[MagicMock()] * 48)
-    mock_page.locators.TITLE = MagicMock(return_value="Test Job")
-    mock_page.locators.COMPANY = MagicMock(return_value="Test Company")
-    mock_page.locators.LOCATION = MagicMock(return_value="Test Location")
-    mock_page.locators.URL = MagicMock(return_value="about:blank")
-    mock_page.locators.DESCRIPTION = MagicMock(return_value="Test Description")
-    mock_page.locators.EASY_APPLY = MagicMock(return_value=True)
-    mock_page.locators.APPLY = MagicMock(return_value=True)
+        self.mocker.patch.object(JobExtractor, 'search_results_elements', return_value=[])
 
-    jobs = job_extractor.extract_jobs(limit=48)
-    assert len(jobs) == 48
-    for job in jobs:
-        assert isinstance(job, Job)
-        assert job.title == "Test Job"
-        assert job.company == "Test Company"
-        assert job.location == "Test Location"
-        assert job.url == "about:blank"
-        assert job.description == "Test Description"
-        assert job.easy_apply is True
+        jobs = self.job_extractor.extract_jobs(Constants.JOBS_SEARCH_URL, 4)
 
-@pytest.mark.skip(reason="no way of currently testing this")
-def test_no_limit_job_extractor(job_extractor: JobExtractor, mock_page: Page):
-    mock_page.goto = MagicMock()
-    mock_page.url = "https://www.linkedin.com/jobs/search/?distance=25&geoId=101620260&keywords=qa%20automation%20engineer"
-    mock_page.locators = MagicMock()
-    mock_page.locators.SEARCH_RESULTS = MagicMock(return_value=[MagicMock()] * 10)
-    mock_page.locators.TITLE = MagicMock(return_value="Test Job")
-    mock_page.locators.COMPANY = MagicMock(return_value="Test Company")
-    mock_page.locators.LOCATION = MagicMock(return_value="Test Location")
-    mock_page.locators.URL = MagicMock(return_value="about:blank")
-    mock_page.locators.DESCRIPTION = MagicMock(return_value="Test Description")
-    mock_page.locators.EASY_APPLY = MagicMock(return_value=True)
-    mock_page.locators.APPLY = MagicMock(return_value=True)
-    mock_page.locators.NUM_OF_SEARCH_RESULTS = MagicMock(return_value="10")
+        assert isinstance(jobs, list)
+        assert len(jobs) == 0
+        logger.info("test_extract_job_information_no_results completed successfully")
 
-    jobs = job_extractor.extract_jobs(limit=None)
-    assert len(jobs) == 10
-    for job in jobs:
-        assert isinstance(job, Job)
-        assert job.title == "Test Job"
-        assert job.company == "Test Company"
-        assert job.location == "Test Location"
-        assert job.url == "about:blank"
-        assert job.description == "Test Description"
-        assert job.easy_apply is True
+    def test_extract_job_information(self) -> None:
+        """Tests the extraction of job information from a real LinkedIn search results page."""
+        logger.info("Starting test_extract_job_information")
+
+        self.mocker.patch.object(JobExtractor, 'search_results_elements', [
+            self.mocker.MagicMock(), self.mocker.MagicMock(), self.mocker.MagicMock(), self.mocker.MagicMock()
+        ])
+        self.mocker.patch.object(JobExtractor, 'job_title', new_callable=self.mocker.PropertyMock, return_value="Software Engineer")
+        self.mocker.patch.object(JobExtractor, 'job_company', new_callable=self.mocker.PropertyMock, return_value="Tech Company")
+        self.mocker.patch.object(JobExtractor, 'job_location', new_callable=self.mocker.PropertyMock, return_value="San Francisco")
+        self.mocker.patch.object(JobExtractor, 'job_url', new_callable=self.mocker.PropertyMock, return_value="https://example.com")
+        self.mocker.patch.object(JobExtractor, 'job_description', new_callable=self.mocker.PropertyMock, return_value="Job description")
+        self.mocker.patch.object(JobExtractor, 'is_job_easy_apply', new_callable=self.mocker.PropertyMock, return_value=True)
+        self.mocker.patch.object(JobExtractor, 'is_job_apply_button', new_callable=self.mocker.PropertyMock, return_value=True)
+
+        jobs = self.job_extractor.extract_jobs(Constants.JOBS_SEARCH_URL, 4)
+
+        assert isinstance(jobs, list)
+        assert len(jobs) == 4
+        for job in jobs:
+            assert isinstance(job, Job)
+            assert job.title == "Software Engineer"
+            assert job.company == "Tech Company"
+            assert job.location == "San Francisco"
+            assert job.url == "https://example.com"
+            assert job.description == "Job description"
+            assert job.easy_apply is True
+        logger.info("test_extract_job_information completed successfully")

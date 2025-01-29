@@ -4,108 +4,111 @@ import pytest
 from configparser import ConfigParser
 from playwright.sync_api import Page
 
+from src.constants.linkedin import LinkedInConstants
 import src.logger as LOGGER
-from src.linkedin.exceptions import LinkedInSearchError
-from src.search.search import LinkedInJobSearch
+from src.exceptions import SearchError
+from src.search.linkedin.job_extractor import JobExtractor
+from src.search.linkedin.search import JobSearch
 from src.models.job import Job
 
 logger = LOGGER.get(__name__)
 
-def test_successful_search(playwright_page: Page, config: ConfigParser, mocker: pytest.MonkeyPatch) -> None:
-    """Tests a successful job search on LinkedIn with valid inputs."""
-    logger.info("Starting test_successful_search")
-    keywords = config.get("search", "keywords", fallback="software engineer")
-    location = config.get("search", "location", fallback="london")
-    geold = config.get("search", "geold", fallback="")
 
-    mock_goto = mocker.patch.object(playwright_page, "goto")
-    search = LinkedInJobSearch(playwright_page)
-    search.search_jobs(keywords, location, geold)
+class TestLinkedInJobSearch:
+    @pytest.fixture(autouse=True)
+    def setup(self, playwright_page: Page, config: ConfigParser, mocker: pytest.MonkeyPatch):
+        self.linkedin_page = playwright_page
+        self.config = config
+        self.mocker = mocker
+        self.search = JobSearch(playwright_page, LinkedInConstants)
+        logger.info("Setup for LinkedInJobSearch tests")
 
-    keywords = keywords.replace(' ', '+')
-    location = location.replace(' ', '+')
-    expected_url_part = f"keywords={keywords}&location={location}&geold={geold}"
+    def test_build_search_url(self) -> None:
+        """Tests the _build_search_url method."""
+        logger.info("Starting test_build_search_url")
+        keywords = self.config.get("search", "keywords", fallback="software engineer")
+        location = self.config.get("search", "location", fallback="london")
 
-    mock_goto.assert_called_once()
-    assert expected_url_part in mock_goto.call_args[0][0]
-    logger.info("test_successful_search completed successfully")
+        search_url = self.search._build_search_url(keywords, location)
 
-def test_failed_search_invalid_input(playwright_page: Page) -> None:
-    """Tests that a SearchError is raised when invalid input is provided."""
-    logger.info("Starting test_failed_search_invalid_input")
-    invalid_keywords = ""
-    valid_location = "London"
-    with pytest.raises(LinkedInSearchError, match="Failed to perform job search"):
-        LinkedInJobSearch(playwright_page).search_jobs(invalid_keywords, valid_location)
-    logger.info("test_failed_search_invalid_input completed successfully")
+        keywords = keywords.replace(' ', '+')
+        location = location.replace(' ', '+')
+        expected_url_part = f"keywords={keywords}&location={location}"
 
-def test_search_with_additional_filters(playwright_page: Page, config: ConfigParser, mocker: pytest.MonkeyPatch) -> None:
-    """Tests job search functionality with additional filters."""
-    logger.info("Starting test_search_with_additional_filters")
-    keywords = config.get("search", "keywords", fallback="software engineer")
-    location = config.get("search", "location", fallback="london")
-    geold = config.get("search", "geold", fallback="")
-    additional_filters = {"f_WT": "2", "f_E": "2"}
+        assert expected_url_part in search_url
+        logger.info("test_build_search_url completed successfully")
 
-    mock_goto = mocker.patch.object(playwright_page, "goto")
-    search = LinkedInJobSearch(playwright_page)
-    search.search_jobs(keywords, location, geold, additional_filters)
+    def test_successful_search_mocked(self) -> None:
+        """Tests a successful job search on LinkedIn with mocked extract_jobs method."""
+        logger.info("Starting test_successful_search_mocked")
+        keywords = self.config.get("search", "keywords", fallback="software engineer")
+        location = self.config.get("search", "location", fallback="london")
 
-    keywords = keywords.replace(' ', '+')
-    location = location.replace(' ', '+')
-    expected_url_part = f"keywords={keywords}&location={location}&geold={geold}&f_WT=2&f_E=2"
+        self.mocker.patch.object(self.linkedin_page, 'goto')
+        self.mocker.patch.object(type(self.linkedin_page), 'url', new_callable=self.mocker.PropertyMock, return_value=f"https://www.linkedin.com/jobs/search?keywords={keywords.replace(' ', '+')}&location={location.replace(' ', '+')}")
 
-    mock_goto.assert_called_once()
-    assert expected_url_part in mock_goto.call_args[0][0]
-    logger.info("test_search_with_additional_filters completed successfully")
+        self.mocker.patch.object(JobExtractor, 'extract_jobs', return_value=[
+            Job(title="Software Engineer", company="Tech Company", location="London", url="https://example.com", easy_apply=False)
+        ])
 
-def test_extract_job_information_with_real_page(playwright_page: Page, mocker: pytest.MonkeyPatch) -> None:
-    """Tests the extraction of job information from a real LinkedIn search results page."""
-    logger.info("Starting test_extract_job_information_with_real_page")
-    search_url = "https://www.linkedin.com/jobs/search/"
-    mocker.patch.object(playwright_page, "goto", return_value=None)
-    mocker.patch.object(playwright_page, "query_selector_all", return_value=[
-        mocker.MagicMock(inner_text="Job Title\nCompany\nLocation\nhttps://example.com")
-    ])
+        jobs = self.search.search_jobs(keywords=keywords, location=location)
 
-    search = LinkedInJobSearch(playwright_page)
-    jobs = search.job_extractor.extract_jobs(None, 4)
+        keywords = keywords.replace(' ', '+')
+        location = location.replace(' ', '+')
+        expected_url_part = f"keywords={keywords}&location={location}"
 
-    assert isinstance(jobs, list)
-    assert len(jobs) > 0
-    for job in jobs:
-        assert isinstance(job, Job)
-        assert job.title is not None
-        assert job.company is not None
-        assert job.location is not None
-        assert job.url is not None
-    logger.info("test_extract_job_information_with_real_page completed successfully")
+        assert expected_url_part in self.linkedin_page.url
+        assert isinstance(jobs, list)
+        assert len(jobs) > 0
+        for job in jobs:
+            assert isinstance(job, Job)
+            assert job.title == "Software Engineer"
+            assert job.company == "Tech Company"
+            assert job.location == "London"
+            assert job.url == "https://example.com"
+        logger.info("test_successful_search_mocked completed successfully")
 
-def test_extract_job_information_no_results(playwright_page: Page, mocker: pytest.MonkeyPatch) -> None:
-    """Tests the extraction of job information when no results are found."""
-    logger.info("Starting test_extract_job_information_no_results")
+    def test_successful_search(self) -> None:
+        """Tests a successful job search on LinkedIn with valid inputs."""
+        logger.info("Starting test_successful_search")
+        keywords = self.config.get("search", "keywords", fallback="software engineer")
+        location = self.config.get("search", "location", fallback="london")
+        epoch_ago = self.config.get("search", "epoch_ago", fallback="Past 24 hours")
 
-    mocker.patch.object(playwright_page, "query_selector_all", return_value=[])
+        jobs = self.search.search_jobs(keywords=keywords, location=location, epoch_ago=epoch_ago, limit=4)
 
-    search = LinkedInJobSearch(playwright_page)
-    jobs = search.job_extractor.extract_jobs(None, 4)
+        keywords = keywords.replace(' ', '%20')
+        location = location.replace(' ', '%20')
+        expected_url_part = f"keywords={keywords}&location={location}"
 
-    assert isinstance(jobs, list)
-    assert len(jobs) == 0
-    logger.info("test_extract_job_information_no_results completed successfully")
+        assert expected_url_part in self.linkedin_page.url
+        assert isinstance(jobs, list)
+        assert len(jobs) == 4
+        for job in jobs:
+            assert isinstance(job, Job)
+            assert job.title
+            assert job.company
+            assert job.location
+            assert job.url
+        logger.info("test_successful_search completed successfully")
 
-def test_extract_job_information_missing_info(playwright_page: Page, mocker: pytest.MonkeyPatch) -> None:
-    """Tests missing title, company, location, or url."""
-    logger.info("Starting test_extract_job_information_missing_info")
+    def test_search_jobs_error(self) -> None:
+        """Tests the LinkedInJobSearch.search_jobs method to handle SearchError."""
+        logger.info("Starting test_search_jobs_error")
+        keywords = self.config.get("search", "keywords", fallback="software engineer")
+        location = self.config.get("search", "location", fallback="london")
 
-    mocker.patch.object(playwright_page, "query_selector_all", return_value=[
-        mocker.MagicMock(inner_text="\nCompany\nLocation\nhttps://example.com")
-    ])
+        self.mocker.patch.object(JobSearch, '_build_search_url', side_effect=Exception("Navigation error"))
 
-    search = LinkedInJobSearch(playwright_page)
-    jobs = search.job_extractor.extract_jobs(None, 4)
+        with pytest.raises(SearchError):
+            self.search.search_jobs(keywords=keywords, location=location)
+        
+        logger.info("test_search_jobs_error completed successfully")
 
-    assert len(jobs) == 0  # No jobs should be returned as title is missing
-    logger.info("test_extract_job_information_missing_info completed successfully")
-
-# Additional test cases can be added as needed.
+    def test_select_time_range(self) -> None:
+        """Tests the _select_time_range method."""
+        logger.info("Starting test_select_time_range")
+        search_url = LinkedInConstants.JOBS_SEARCH_URL
+        self.linkedin_page.goto(search_url)
+        self.search._select_time_range()
+        logger.info("test_select_time_range completed successfully")
