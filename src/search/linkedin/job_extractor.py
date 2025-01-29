@@ -3,6 +3,7 @@
 
 import re
 from time import sleep
+from src.constants.constants import Constants
 import src.logger as LOGGER
 from typing import Optional, List, Dict
 from playwright.sync_api import Page, Locator
@@ -12,46 +13,42 @@ from playwright_utils import (
     get_element_attribute,
     get_element_text,
     wait_for_all_elements,
-    wait_for_element,
-    wait_for_url_change,
+    wait_for_element
 )
-from src.constants import URL_PAGE_NUM_PARAMETER, Locators, NUM_OF_JOBS_IN_PAGE
-
 
 logger = LOGGER.get(__name__)
-
 
 
 class JobExtractor:
     
     @property
     def search_results_elements(self) -> List[Locator]:
-        return wait_for_all_elements(self.page, self.locators.SEARCH_RESULTS)
+        return wait_for_all_elements(self.page, self.constants.Locators.Job.SEARCH_RESULTS)
 
     @property
     def job_title(self) -> Optional[str]:
-        return get_element_text(self.page, self.locators.TITLE)
+        return get_element_text(self.page, self.constants.Locators.Job.TITLE)
 
     @property
     def job_company(self) -> Optional[str]:
-        return get_element_text(self.page, self.locators.COMPANY)
+        return get_element_text(self.page, self.constants.Locators.Job.COMPANY)
 
     @property
     def job_location(self) -> Optional[str]:
-        return get_element_text(self.page, self.locators.LOCATION)
+        return get_element_text(self.page, self.constants.Locators.Job.LOCATION)
 
     @property
     def job_url(self) -> Optional[str]:
-        return get_element_attribute(self.page, self.locators.URL, "href")
+        return get_element_attribute(self.page, self.constants.Locators.Job.URL, "href")
 
     @property
     def job_description(self) -> Optional[str]:
-        return get_element_text(self.page, self.locators.DESCRIPTION)
+        return get_element_text(self.page, self.constants.Locators.Job.DESCRIPTION)
 
     @property
     def is_job_easy_apply(self) -> bool:
         try:
-            wait_for_element(self.page, self.locators.EASY_APPLY)
+            wait_for_element(self.page, self.constants.Locators.Job.EASY_APPLY)
             return True
         except Exception:
             return False
@@ -59,38 +56,38 @@ class JobExtractor:
     @property
     def is_job_apply_button(self) -> bool:
         try:
-            wait_for_element(self.page, self.locators.APPLY)
+            wait_for_element(self.page, self.constants.Locators.Job.APPLY)
             return True
         except Exception:
             return False
 
-
-    def __init__(self, page: Page):
+    def __init__(self, page: Page, constants: Constants):
         logger.debug("JobExtractor instance created")
         self.page = page
-        self.locators = Locators.Job
+        self.constants = constants
+        self.locators = constants.Locators
+        self.URL_PAGE_NUM_PARAMETER = constants.URL_PAGE_NUM_PARAMETER
+        self.NUM_OF_JOBS_IN_PAGE = constants.NUM_OF_JOBS_IN_PAGE
     
     def _next_results_page(self) -> None:
         """Navigate to the next page in the search results"""
         logger.debug("JobExtractor._next_results_page")
         current_url = self.page.url
 
-        if URL_PAGE_NUM_PARAMETER in current_url:
-            pattern = fr"{URL_PAGE_NUM_PARAMETER}(\d+)"
+        if self.URL_PAGE_NUM_PARAMETER in current_url:
+            pattern = fr"{self.URL_PAGE_NUM_PARAMETER}(\d+)"
             match = re.search(pattern, current_url)
             if match:
                 current_start_str = match.group(1)
-                new_start = int(current_start_str) + NUM_OF_JOBS_IN_PAGE
+                new_start = int(current_start_str) + self.NUM_OF_JOBS_IN_PAGE
                 updated_url = re.sub(pattern, f"&start={new_start}", current_url)
                 self.page.goto(updated_url)
             else:
                 raise ValueError("Could not find 'start' parameter in the URL.")
         else:
-            self.page.goto(f"{self.page.url}{URL_PAGE_NUM_PARAMETER}{NUM_OF_JOBS_IN_PAGE}")
+            self.page.goto(f"{self.page.url}{self.URL_PAGE_NUM_PARAMETER}{self.NUM_OF_JOBS_IN_PAGE}")
 
-    def extract_jobs(
-        self, url: Optional[str] = None, limit: Optional[int] = None
-    ) -> List[Job]:
+    def extract_jobs(self, url: Optional[str] = None, limit: Optional[int] = None) -> List[Job]:
         """Extracts job information from the search results page."""
         logger.debug("JobExtractor.extract_jobs")
 
@@ -99,7 +96,6 @@ class JobExtractor:
 
         if url:
             self.page.goto(url)
-            wait_for_url_change(self.page, url)
         try:
             jobs = self._process_job_elements(limit)
         except Exception as e:
@@ -112,27 +108,32 @@ class JobExtractor:
         """Process job elements from search results, extracting and validating job data."""
         logger.debug("JobExtractor._process_job_elements")
         
-        limit = self._determine_job_limit(limit)
+        if not limit:
+            limit = self._determine_job_limit(limit)
         jobs = []
-        processed_count = 0
+        total_processed_elements = 0
         elements = self.search_results_elements
+        num_of_elements_in_page = len(elements)
+        proccesed_in_current_page = 0
 
-        while processed_count < limit:
+        while total_processed_elements < limit:
             try:
-                
-                if processed_count >= len(elements):
-                    processed_count = 0
-                    limit -= len(elements)
+                if proccesed_in_current_page >= num_of_elements_in_page:
+                    if num_of_elements_in_page < self.NUM_OF_JOBS_IN_PAGE:
+                        break
+                    proccesed_in_current_page = 0
                     self._next_results_page()
+                    # TODO: still need to verify that next page is loaded with results.
                     elements.append(self.search_results_elements)
                 
-                element = elements[processed_count]                
+                element = elements[proccesed_in_current_page]                
                 element.click()
                 
                 job = self._process_single_job_element()
                 if job: jobs.append(job)
 
-                processed_count += 1
+                total_processed_elements += 1
+                proccesed_in_current_page += 1
             except Exception as e:
                 logger.warning(f"Failed processing job elements: {str(e)}")
                 continue
@@ -141,11 +142,12 @@ class JobExtractor:
 
     def _determine_job_limit(self, limit: Optional[int]) -> int:
         """Determine the number of jobs to process."""
+        # TODO: Should be fixed as only the first digit is catched
         logger.debug("JobExtractor._determine_job_limit")
         if limit is not None:
             return limit
         
-        limit_text = get_element_text(self.page, self.locators.NUM_OF_SEARCH_RESULTS)
+        limit_text = get_element_text(self.page, self.locators.Search.NUM_OF_SEARCH_RESULTS)
         match = re.match(r"^\d+", limit_text)
         
         if match:
