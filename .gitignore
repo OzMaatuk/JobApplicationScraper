@@ -7,7 +7,5 @@ data/browser_user_data/
 data/huggingface_cache/
 data/results/
 data/logs/
-data/tests/
 data/personal/
-*.txt
 *.log

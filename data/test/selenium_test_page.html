@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Selenium Utils Test Page</title>
+    <style>
+        #delayedElement {
+            display: none;
+        }
+
+        /* Style for click interception test */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+            z-index: 100; /* Ensure it's on top */
+            display: none; /* Initially hidden */
+        }
+
+        #elementToInterceptClick{
+          z-index: 1; /* below the overlay */
+        }
+
+
+        /* JavaScript to control the delayed element */
+
+
+    </style>
+</head>
+<body>
+
+    <h1>Selenium Utils Test Page</h1>
+
+    <input type="text" id="textInput" value="Initial Text">
+    <button id="clickableElement">Clickable</button>
+
+    <button id="elementToInterceptClick">Click Me (Will be intercepted)</button>
+
+    <div id="overlay"></div>
+
+    <div id="multipleElementsContainer">
+        <p id="multipleElement1">Element 1</p>
+        <p id="multipleElement2">Element 2</p>
+        <p id="multipleElement3">Element 3</p>
+    </div>
+
+
+    <a href="https://www.example.com" id="linkToExample">Link to Example</a>
+
+    <a href="https://www.example.com" id="delayedLink" style="display:none;">Delayed Link</a>
+
+
+
+    <script>
+        setTimeout(function() {
+            document.getElementById('delayedElement').style.display = 'block';
+            document.getElementById('delayedLink').style.display = 'block';
+
+        }, 3000); // Element appears after 3 seconds
+
+
+          document.getElementById('elementToInterceptClick').addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent navigation
+            document.getElementById('overlay').style.display = 'block'; // Show overlay
+          });
+
+
+    </script>
+
+    <div id="delayedElement">This element appears after a delay.</div>
+</body>
+</html>

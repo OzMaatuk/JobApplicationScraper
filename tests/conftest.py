@@ -32,7 +32,7 @@ def logger(config: configparser.ConfigParser) -> logging.Logger:
 def test_server(request: pytest.FixtureRequest, logger: logging.Logger) -> Generator[str, None, None]:
     """Fixture to run a simple HTTP server for serving the test HTML page."""
     logger.info("Starting test HTTP server")
-    process = subprocess.Popen(["python", "-m", "http.server", "--directory", "data/tests/"])
+    process = subprocess.Popen(["python", "-m", "http.server", "--directory", "data/test/"])
     time.sleep(3)
     yield "http://localhost:8000/"
     logger.info("Stopping test HTTP server")

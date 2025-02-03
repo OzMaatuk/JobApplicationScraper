@@ -1,0 +1,18 @@
+# Core Libraries
+playwright
+
+# Configuration
+python-dotenv
+configparser
+
+# Utilities
+pypdf
+fuzzywuzzy
+git+https://github.com/OzMaatuk/LLMUtils.git
+git+https://github.com/OzMaatuk/PlaywrightUtils.git
+
+# Testing
+pytest
+pytest-mock
+pytest-playwright
+pytest-asyncio
