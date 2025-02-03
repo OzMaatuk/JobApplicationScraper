@@ -1,4 +1,5 @@
 # tests/test_job.py
+
 from src.models.job import Job
 
 class TestJobModel:
