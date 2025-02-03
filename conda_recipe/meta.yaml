@@ -1,0 +1,32 @@
+# conda_recipe/meta.yaml
+
+package:
+  name: jobapplicationscraper
+  version: "0.1.0"
+
+source:
+  path: ..
+
+build:
+  script: python -m pip install .
+
+requirements:
+  host:
+    - python
+    - pip
+  run:
+    - python
+    - playwright
+    - python-dotenv
+    - configparser
+    - pypdf
+    - fuzzywuzzy
+    - pytest
+    - pytest-mock
+    - pytest-playwright
+    - pytest-asyncio
+
+about:
+  home: https://github.com/OzMaatuk/JobApplicationScraper
+  license: MIT
+  summary: A tool for scraping job applications.

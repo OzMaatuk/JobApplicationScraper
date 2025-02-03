@@ -1,0 +1,18 @@
+name: jobapplicationscraper
+channels:
+  - defaults
+dependencies:
+  - python
+  - pip
+  - playwright
+  - python-dotenv
+  - configparser
+  - pypdf
+  - fuzzywuzzy
+  - pytest
+  - pytest-mock
+  - pytest-playwright
+  - pytest-asyncio
+  - pip:
+      - git+https://github.com/OzMaatuk/LLMUtils.git
+      - git+https://github.com/OzMaatuk/PlaywrightUtils.git

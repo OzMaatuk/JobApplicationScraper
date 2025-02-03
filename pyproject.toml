@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jobapplicationscraper"
+version = "0.1.0"
+description = "A tool for scraping job applications."
+readme = "README.md"
+requires-python = ">=3.6"
+license = {text = "MIT"}
+authors = [
+    {name = "Oz Levi", email = "ozmaatuk@gmail.com"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "playwright",
+    "python-dotenv",
+    "configparser",
+    "pypdf",
+    "fuzzywuzzy"
+]
+
+[project.optional-dependencies]
+dev = [
+    "git+https://github.com/OzMaatuk/LLMUtils.git",
+    "git+https://github.com/OzMaatuk/PlaywrightUtils.git"
+]
+test = [
+    "pytest",
+    "pytest-mock",
+    "pytest-playwright",
+    "pytest-asyncio"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[project.urls]
+homepage = "https://github.com/OzMaatuk/JobApplicationScraper"
