@@ -1,17 +1,17 @@
 # main.py
 
-from dataclasses import asdict
-import json
-from driver import initialize_driver
-from src.constants.linkedin import LinkedInConstants
-import src.logger as LOGGER
 import datetime
+import json
 from typing import List
+from dataclasses import asdict
+from driver import initialize_driver
 from dotenv import load_dotenv
 
+from src.constants.linkedin import LinkedInConstants
 from src.facade import Facade
 from src.exceptions import AutomationError
 from src.models.job import Job
+import src.logger as LOGGER
 
 logger = LOGGER.get(__name__)
 load_dotenv()

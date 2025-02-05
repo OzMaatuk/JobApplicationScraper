@@ -10,11 +10,10 @@ def test_description_matcher_fuzz():
     assert matcher.matches("Software Engineer", "Software Engineer") is True
 
 def test_description_matcher_llm(mocker):
-    mock_llm = mocker.Mock(spec=LLMUtils)
     mocker.patch.object(LLMUtils, "generate_text", return_value="90")
     matcher = DescriptionMatcher(method="llm")
     assert matcher.matches("Software Engineer", "Senior Software Engineer") is True
-    LLMUtils.generate_text.assert_called_once_with("Given the job description: Software Engineer, and the user description: Senior Software Engineer, rate the similarity between the two descriptions from 0 to 100. return only the final score.")
+    LLMUtils.generate_text.assert_called_once_with("Given the current job description: Software Engineer, and the desired job description: Senior Software Engineer, rate from 0 to 100 if the current job description is matching the desired job description. return only the final score.")
 
 def test_description_matcher_invalid_method():
     with pytest.raises(ValueError, match="Invalid matching method"):

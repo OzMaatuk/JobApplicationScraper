@@ -1,6 +1,5 @@
 # src/facade.py
 
-from src.apply.apply import Apply
 import src.logger as LOGGER
 from playwright.sync_api import Page
 from typing import List, Dict, Optional

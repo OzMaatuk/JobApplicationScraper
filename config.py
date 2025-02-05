@@ -14,13 +14,17 @@ if not chrome_user_data_path:
 config.get("general", "user_data_path")
 
 # Load Credentials: (First from .env, else from config)
-linkedin_username = os.environ.get("LINKEDIN_USERNAME", config.get("user_info", "username", fallback=None))
+linkedin_username = os.environ.get("LINKEDIN_USERNAME")
 if not linkedin_username:
-    raise ValueError("LINKEDIN_USERNAME is not set in environment variables or config.ini.")
+    linkedin_username = config.get("user_info", "username", fallback=None)
+    if not linkedin_username:
+        raise ValueError("LINKEDIN_USERNAME is not set in environment variables or config.ini.")
 
-linkedin_password = os.environ.get("LINKEDIN_PASSWORD", config.get("user_info", "password", fallback=None))
+linkedin_password = os.environ.get("LINKEDIN_PASSWORD")
 if not linkedin_password:
-    raise ValueError("LINKEDIN_PASSWORD is not set in environment variables or config.ini.")
+    linkedin_password = config.get("user_info", "password", fallback=None)
+    if not linkedin_password:
+        raise ValueError("LINKEDIN_PASSWORD is not set in environment variables or config.ini.")
 
 # Load resume path
 resume_path = config.get("general", "resume_path", fallback=None)

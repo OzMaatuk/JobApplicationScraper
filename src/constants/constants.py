@@ -17,7 +17,7 @@ class Constants():
     DEFAULT_LOGGING_LEVEL = "DEBUG"
     DEFAULT_LOGGING_FILE = "data/logs/main.log"
     DEFAULT_TEST_LOGGING_FILE = "data/logs/test.log"
-    LOG_TO_FILE = False
+    LOG_TO_FILE = True
 
     # --- Google Generative AI ---
     GOOGLE_API_MODEL = "gemini-1.5-flash" # Default model for Google Generative AI
