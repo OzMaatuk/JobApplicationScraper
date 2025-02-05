@@ -33,8 +33,7 @@ dev = [
 test = [
     "pytest",
     "pytest-mock",
-    "pytest-playwright",
-    "pytest-asyncio"
+    "pytest-playwright"
 ]
 
 [tool.setuptools.packages.find]

@@ -15,4 +15,3 @@ git+https://github.com/OzMaatuk/PlaywrightUtils.git
 pytest
 pytest-mock
 pytest-playwright
-pytest-asyncio

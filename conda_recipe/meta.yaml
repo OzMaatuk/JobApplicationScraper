@@ -24,7 +24,6 @@ requirements:
     - pytest
     - pytest-mock
     - pytest-playwright
-    - pytest-asyncio
 
 about:
   home: https://github.com/OzMaatuk/JobApplicationScraper
