@@ -2,8 +2,6 @@
 
 import logging
 import configparser
-import subprocess
-import time
 import pytest
 from typing import Generator
 from playwright.sync_api import sync_playwright, Browser, Page
@@ -113,13 +111,3 @@ def test_job():
         url="about:blank",
         easy_apply=True
     )
-
-@pytest.fixture(scope="module")
-def credentials(config: configparser.ConfigParser) -> dict:
-    """Provides LinkedIn credentials from the config."""
-    return {
-        "username": config.get("user_info", "username"),
-        "password": config.get("user_info", "password"),
-        "invalid_username": config.get("invalid_credentials", "username"),
-        "invalid_password": config.get("invalid_credentials", "password")
-    }
