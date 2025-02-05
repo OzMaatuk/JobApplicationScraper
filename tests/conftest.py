@@ -28,17 +28,6 @@ def logger(config: configparser.ConfigParser) -> logging.Logger:
     LOGGER.set_output_path(config.get("general", "log_file_path"))
     return LOGGER.get(__name__)
 
-@pytest.fixture(scope="session")
-def test_server(request: pytest.FixtureRequest, logger: logging.Logger) -> Generator[str, None, None]:
-    """Fixture to run a simple HTTP server for serving the test HTML page."""
-    logger.info("Starting test HTTP server")
-    process = subprocess.Popen(["python", "-m", "http.server", "--directory", "data/test/"])
-    time.sleep(3)
-    yield "http://localhost:8000/"
-    logger.info("Stopping test HTTP server")
-    process.terminate()
-    logger.info("Test HTTP server terminated")
-
 @pytest.fixture(scope="module")
 def playwright_browser(logger: logging.Logger, config: configparser.ConfigParser) -> Generator[Browser, None, None]:
     """Fixture to set up and tear down the Playwright browser instance."""
