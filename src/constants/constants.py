@@ -9,6 +9,8 @@ class Constants():
     DEFAULT_TIMEOUT = 10
     DEFAULT_THRESHOLD = 80
     DEFAULT_MATCHING_METHOD = "llm"
+    DEFAULT_JOB_LIMIT = 10
+    DEFAULT_EPOCH_AGO = 86400
 
     # --- Logging ---
     LOGGING_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'  # Standard logging format

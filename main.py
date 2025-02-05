@@ -31,7 +31,7 @@ def _save_results(path: str, jobs: List[Job]) -> None:
 def main():
     try:
         logger.info("Load Configuration")
-        from config import matching_method, threshold, linkedin_password, linkedin_username, keywords, location, epoch_ago, user_description, output_file_name, log_level, chrome_user_data_path, resume_path
+        from config import matching_method, threshold, linkedin_password, linkedin_username, keywords, location, epoch_ago, user_description, output_file_name, log_level, chrome_user_data_path, resume_path, limit
         if log_level: logger.setLevel(level=log_level)
 
         logger.info("Initialize Playwright")
@@ -42,7 +42,7 @@ def main():
         facade = Facade(page, LinkedInConstants, matching_method, threshold)
         facade.login(linkedin_username, linkedin_password)
         # Search for Jobs
-        jobs = facade.search_jobs(keywords, location, epoch_ago, limit=10)
+        jobs = facade.search_jobs(keywords, location, epoch_ago, limit=limit)
         jobs_to_apply = facade.filter_jobs(jobs, user_description)
 
         logger.info("Close the browser")
