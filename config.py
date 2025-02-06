@@ -41,6 +41,8 @@ threshold = int(config.get("matching", "threshold", fallback=Constants.DEFAULT_T
 user_description = config.get("matching", "description", fallback=None)
 output_file_name = config.get("general", "output_path", fallback=None)
 
+site_type = config.get("general", "site_type", fallback="linkedin")
+
 # logging configuration
 log_level = config.get("general", "log_level", fallback=Constants.DEFAULT_LOGGING_LEVEL)
 log_file_path = config.get("general", "log_file", fallback=None)

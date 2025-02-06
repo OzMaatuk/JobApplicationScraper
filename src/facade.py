@@ -5,7 +5,8 @@ from playwright.sync_api import Page
 from typing import List, Dict, Optional
 
 from src.login.login import Login
-from src.search.linkedin.search import JobSearch
+from src.search.linkedin.search import LinkedInJobSearch
+from src.search.indeed.search import IndeedJobSearch
 from src.models.job import Job
 from src.utils.description_matcher import DescriptionMatcher
 
@@ -15,15 +16,21 @@ from src.constants.constants import Constants
 logger = LOGGER.get(__name__)
 
 class Facade:
-    """Facade class for LinkedIn automation."""
+    """Facade class for job search automation."""
 
-    def __init__(self, page: Page, constants: Constants, method: str = "llm", threshold: int = Constants.DEFAULT_THRESHOLD):
+    def __init__(self, page: Page, constants: Constants, site_type: str, method: str = "llm", threshold: int = Constants.DEFAULT_THRESHOLD):
         logger.debug("Facade instance is created")
         self.page = page
         self.login_obj = Login(self.page, constants)
-        self.search_obj = JobSearch(self.page, constants)
         self.matcher = DescriptionMatcher(method, threshold)
         self.constants = constants
+
+        if site_type == "linkedin":
+            self.search_obj = LinkedInJobSearch(self.page, constants)
+        elif site_type == "indeed":
+            self.search_obj = IndeedJobSearch(self.page, constants)
+        else:
+            raise ValueError(f"Unsupported site type: {site_type}")
 
     def login(self, username: str, password: str) -> None:
         logger.debug("Facade.login")
