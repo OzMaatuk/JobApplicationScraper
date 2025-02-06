@@ -7,7 +7,6 @@ from dataclasses import asdict
 from driver import initialize_driver
 from dotenv import load_dotenv
 
-from src.constants.linkedin import LinkedInConstants
 from src.facade import Facade
 from src.exceptions import AutomationError
 from src.models.job import Job
@@ -39,7 +38,7 @@ def main():
         page = browser.pages[0]
 
         logger.info("Initialize and run the facade")
-        facade = Facade(page, LinkedInConstants, site_type, matching_method, threshold)
+        facade = Facade(page, site_type, matching_method, threshold)
         facade.login(linkedin_username, linkedin_password)
         # Search for Jobs
         jobs = facade.search_jobs(keywords, location, epoch_ago, limit=limit)
