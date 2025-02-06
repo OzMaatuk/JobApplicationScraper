@@ -8,7 +8,7 @@ from src.constants.linkedin import LinkedInConstants
 import src.logger as LOGGER
 from src.exceptions import SearchError
 from src.search.linkedin.job_extractor import JobExtractor
-from src.search.linkedin.search import JobSearch
+from src.search.linkedin.search import LinkedInJobSearch
 from src.models.job import Job
 
 logger = LOGGER.get(__name__)
@@ -20,7 +20,7 @@ class TestLinkedInJobSearch:
         self.linkedin_page = playwright_page
         self.config = config
         self.mocker = mocker
-        self.search = JobSearch(playwright_page, LinkedInConstants)
+        self.search = LinkedInJobSearch(playwright_page, LinkedInConstants)
         logger.info("Setup for LinkedInJobSearch tests")
 
     def test_build_search_url(self) -> None:
@@ -98,7 +98,7 @@ class TestLinkedInJobSearch:
         keywords = self.config.get("search", "keywords", fallback="software engineer")
         location = self.config.get("search", "location", fallback="london")
 
-        self.mocker.patch.object(JobSearch, '_build_search_url', side_effect=Exception("Navigation error"))
+        self.mocker.patch.object(LinkedInJobSearch, '_build_search_url', side_effect=Exception("Navigation error"))
 
         with pytest.raises(SearchError):
             self.search.search_jobs(keywords=keywords, location=location)

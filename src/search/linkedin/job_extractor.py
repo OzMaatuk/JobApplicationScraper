@@ -23,7 +23,7 @@ class JobExtractor:
     
     @property
     def search_results_elements(self) -> List[Locator]:
-        return wait_for_all_elements(self.page, self.constants.Locators.Job.SEARCH_RESULTS)
+        return wait_for_all_elements(self.page, self.constants.Locators.Search.SEARCH_RESULTS)
 
     @property
     def job_title(self) -> Optional[str]:
