@@ -39,8 +39,3 @@ class Constants():
 
     NUM_OF_JOBS_IN_PAGE = 25
     URL_PAGE_NUM_PARAMETER = None
-
-    # --- Easy Apply Form Constants ---
-    class EasyApplyForm:
-        def __init__(self):
-            raise NotImplementedError("Abstarct Constants class does not have EasyApplyForm implementation.")

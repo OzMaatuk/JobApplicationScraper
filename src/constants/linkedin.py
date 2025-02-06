@@ -18,9 +18,7 @@ class LinkedInConstants(Constants):
 
         class Search:
             SEARCH_RESULTS = "//li[contains(@class, 'occludable-update')]"
-            JOBS_SEARCH_KEYWORDS = "input[name='keywords']"
-            JOBS_SEARCH_LOCATION = "input[name='location']"
-            NUM_OF_SEARCH_RESULTS = "//*[@id=\"main\"]/div/div[2]/div[1]/header/div[1]/small"
+            NUM_OF_SEARCH_RESULTS = "//*[@id='main']/div/div[2]/div[1]/header/div[1]/small"
 
         class Job:
             TITLE = "//a[@class='ember-view']"
@@ -30,13 +28,6 @@ class LinkedInConstants(Constants):
             DESCRIPTION = "//div[@id='job-details']"
             EASY_APPLY = "//button[span[text()='Easy Apply']]"
             APPLY = "//button[span[text()='Apply']]"
-            SEARCH_RESULTS = "//li[contains(@class, 'occludable-update')]"
 
     NUM_OF_JOBS_IN_PAGE = 25
     URL_PAGE_NUM_PARAMETER = "&start="
-
-    # --- Easy Apply Form Constants ---
-    class EasyApplyForm:
-        NEXT_BUTTON = '//button[contains(text(), "Next")]'
-        SUBMIT_BUTTON = '//button[@type="submit" or contains(text(), "Submit")]'
-        RADIO_BUTTON_LABEL = "./following-sibling::*[contains(concat(' ',normalize-space(@class),' '),' fb-radio-button__label ')]"
