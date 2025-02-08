@@ -11,7 +11,7 @@ from src.facade import Facade
 from src.models.job import Job
 import src.logger as LOGGER
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def config() -> configparser.ConfigParser:
     """Provides a ConfigParser object initialized with config.ini."""
     logger = LOGGER.get(__name__)
@@ -20,13 +20,13 @@ def config() -> configparser.ConfigParser:
     config.read("pytest.ini")
     return config
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def logger(config: configparser.ConfigParser) -> logging.Logger:
     """Provides a configured logger instance."""
     LOGGER.set_output_path(config.get("general", "log_file_path"))
     return LOGGER.get(__name__)
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def playwright_browser(logger: logging.Logger, config: configparser.ConfigParser) -> Generator[Browser, None, None]:
     """Fixture to set up and tear down the Playwright browser instance."""
     try:
@@ -44,7 +44,7 @@ def playwright_browser(logger: logging.Logger, config: configparser.ConfigParser
         logger.error(f"Failed to launch Playwright browser: {e}")
         raise
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def playwright_browser_no_data(logger: logging.Logger, config: configparser.ConfigParser) -> Generator[Browser, None, None]:
     """Fixture to set up and tear down the Playwright browser instance."""
     try:
@@ -82,7 +82,7 @@ def playwright_page_no_data(playwright_browser_no_data: Browser, logger: logging
     yield page
     page.close()
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def test_page(playwright_browser: Browser, logger: logging.Logger) -> Generator[Page, None, None]:
     """Fixture to set up and tear down the Playwright page instance."""
     page = playwright_browser.pages[0]
@@ -97,12 +97,12 @@ def linkedin_facade(playwright_page: Page) -> Facade:
     """Provides a LinkedInFacade instance with a mocked Playwright Page with user data."""
     return Facade(playwright_page, LinkedInConstants)
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def linkedin_facade_no_data(playwright_page_no_data: Page) -> Facade:
     """Provides a LinkedInFacade instance with a mocked Playwright Page."""
     return Facade(playwright_page_no_data, LinkedInConstants)
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def test_job():
     return Job(
         title="Test Job", 
